@@ -1,10 +1,31 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <title></title>
+  <meta charset="UTF-8">
+  <title>Drawing rectangles</title>
+  <style>
+    #glCanvas {
+      border: 1px solid black;
+    }
+  </style>
 </head>
 <body>
-    <p>higehige</p>
+  <canvas id="glCanvas" width="640" height="480"></canvas>
+  <script type="text/javascript">
+      function main() {
+          const canvas = document.getElementById("glCanvas");
+          const gl = canvas.getContext('webgl');
+
+          if (gl === null) {
+              alert("Unable to initialize WebGL.");
+              return;
+          }
+
+          gl.clearColor(0.0, 0.0, 0.0, 0.3);
+          gl.clear(gl.COLOR_BUFFER_BIT);
+      }
+
+      main();
+  </script>
 </body>
 </html>
