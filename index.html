@@ -3,17 +3,27 @@
 <head>
   <meta charset="UTF-8">
   <title>Drawing rectangles</title>
-  <style>
-    #glCanvas {
-      border: 1px solid black;
-    }
-  </style>
 </head>
 <body>
-  <canvas id="glCanvas" width="640" height="480"></canvas>
+  <canvas id="glCanvas"></canvas>
   <script type="text/javascript">
       function main() {
           const canvas = document.getElementById("glCanvas");
+          canvas.width = 640;
+          canvas.height = 480;
+          const canvasRect = canvas.getBoundingClientRect();
+          const halfCanvasX = canvas.width / 2;
+          const halfCanvasY = canvas.height / 2;
+
+          // Add the event listener for mousemove
+          canvas.addEventListener('mousemove', e => {
+              const canvasX = e.clientX - canvasRect.x;
+              const canvasY = e.clientY - canvasRect.y;
+
+              const glX = (canvasX - halfCanvasX) / halfCanvasX;
+              const glY = -1 * (canvasY - halfCanvasY) / halfCanvasY;
+          });
+
           const gl = canvas.getContext('webgl');
 
           if (gl === null) {
