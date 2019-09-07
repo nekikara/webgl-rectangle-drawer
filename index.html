@@ -1,41 +1,27 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
   <meta charset="UTF-8">
   <title>Drawing rectangles</title>
 </head>
+
 <body>
   <canvas id="glCanvas"></canvas>
-  <script type="text/javascript">
-      function main() {
-          const canvas = document.getElementById("glCanvas");
-          canvas.width = 640;
-          canvas.height = 480;
-          const canvasRect = canvas.getBoundingClientRect();
-          const halfCanvasX = canvas.width / 2;
-          const halfCanvasY = canvas.height / 2;
-
-          // Add the event listener for mousemove
-          canvas.addEventListener('mousemove', e => {
-              const canvasX = e.clientX - canvasRect.x;
-              const canvasY = e.clientY - canvasRect.y;
-
-              const glX = (canvasX - halfCanvasX) / halfCanvasX;
-              const glY = -1 * (canvasY - halfCanvasY) / halfCanvasY;
-          });
-
-          const gl = canvas.getContext('webgl');
-
-          if (gl === null) {
-              alert("Unable to initialize WebGL.");
-              return;
-          }
-
-          gl.clearColor(0.0, 0.0, 0.0, 0.3);
-          gl.clear(gl.COLOR_BUFFER_BIT);
-      }
-
-      main();
+  <script id="vertexShader" type="x-shader/x-vertex">
+    // vertex shader's code goes here
+    void main() {
+      gl_Position = vec4(0.0, 0.5, 0.0, 1.0);
+      gl_PointSize = 200.0;
+    }
   </script>
+  <script id="fragmentShader" type="x-shader/x-fragment">
+    // fragment shader's code goes here
+    void main() {
+      gl_FragColor = vec4(0.5, 0.0, 0.5, 1.0);
+    }
+  </script>
+  <script src="js/main.js" type="text/javascript"></script>
 </body>
+
 </html>
