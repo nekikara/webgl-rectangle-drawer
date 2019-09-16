@@ -19,8 +19,10 @@ function main() {
 
         let leftTopClicked = null;
         let rectCount = 0;
+        let rect;
         scene.onPointerDown = (evt, pickInfo) => {
             if (leftTopClicked) {
+                rect.dispose();
                 const rightBottomClicked = pickInfo.pickedPoint;
                 const width = Math.abs(rightBottomClicked.x - leftTopClicked.x);
                 const height = Math.abs(rightBottomClicked.z - leftTopClicked.z);
@@ -36,7 +38,6 @@ function main() {
             }
         };
 
-        let rect;
         scene.onPointerMove = () => {
             const pInfo = scene.pick(scene.pointerX, scene.pointerY);
             if (pInfo.hit && leftTopClicked) {
@@ -49,6 +50,7 @@ function main() {
 
                 rect = BABYLON.MeshBuilder.CreateGround('disc', {width, height}, scene);
                 rect.material = new BABYLON.StandardMaterial('discMat', scene);
+                rect.material.useLogarithmicDepth = true;
                 rect.material.diffuseColor = new BABYLON.Color3(0.2, 0.2, 0.9);
                 rect.position = leftTopClicked.add(rightBottomClicked).divide(new BABYLON.Vector3(2, 2, 2));
             }
