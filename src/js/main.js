@@ -1,4 +1,7 @@
+import '../scss/main.scss';
+
 function main() {
+  console.log('hgoehoge');
     const canvas = document.getElementById("renderCanvas");
     const engine = new BABYLON.Engine(canvas, false, {depth: true, stencil: true});
 
