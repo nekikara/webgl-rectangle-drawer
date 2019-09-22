@@ -4,13 +4,18 @@ const { CleanWebpackPlugin } = require('clean-webpack-plugin');
 
 module.exports = {
   mode: 'development',
-  entry: './src/js/main.js',
+  entry: './src/js/main.ts',
   plugins: [
     new CleanWebpackPlugin(),
     new HtmlWebpackPlugin({
-      title: 'Output Management'
+      title: 'CAD',
+      template: 'templates/index.html'
     })
   ],
+  devtool: 'inline-source-map',
+  devServer: {
+    contentBase: './dist'
+  },
   output: {
     filename: 'bundle.js',
     path: path.resolve(__dirname, 'dist')
@@ -24,7 +29,14 @@ module.exports = {
           'css-loader',
           'sass-loader'
         ]
+      },
+      {
+        test: /\.tsx?$/,
+        use: 'ts-loader'
       }
     ]
+  },
+  resolve: {
+    extensions: ['.tsx', '.ts', '.js']
   }
 };
