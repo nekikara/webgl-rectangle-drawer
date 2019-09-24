@@ -2,9 +2,10 @@ import '../scss/main.scss';
 
 const VSHADER_SOURCE = `
 attribute vec4 aVertexPosition;
+uniform vec4 uTranslation;
 varying vec4 vColor;
 void main() {
-  gl_Position = aVertexPosition;
+  gl_Position = aVertexPosition + uTranslation;
   if ( gl_Position.x < 0.0 && gl_Position.y < 0.0 ) {
     vColor = vec4(1.0, 0.0, 0.0, 1.0);
   } else if ( 0.0 < gl_Position.x && 0.0 < gl_Position.y ) {
@@ -43,6 +44,8 @@ function main() {
   gl.clearColor(0.0, 0.0, 0.0, 1.0);
   gl.clear(gl.COLOR_BUFFER_BIT);
 
+  const uTranslation = gl.getUniformLocation(shaderProgram, 'uTranslation');
+  gl.uniform4f(uTranslation, 0.5, 0.5, 0.0, 0.0);
   // Register an click handler
   canvas.onclick = (ev) => drawPoints(ev, gl, canvas as HTMLCanvasElement, shaderProgram);
 }
