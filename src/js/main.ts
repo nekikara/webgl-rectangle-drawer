@@ -2,11 +2,9 @@ import '../scss/main.scss';
 
 const VSHADER_SOURCE = `
 attribute vec4 aVertexPosition;
-attribute float aSize;
 varying vec4 vColor;
 void main() {
   gl_Position = aVertexPosition;
-  gl_PointSize = aSize;
   if ( gl_Position.x < 0.0 && gl_Position.y < 0.0 ) {
     vColor = vec4(1.0, 0.0, 0.0, 1.0);
   } else if ( 0.0 < gl_Position.x && 0.0 < gl_Position.y ) {
@@ -45,12 +43,6 @@ function main() {
   gl.clearColor(0.0, 0.0, 0.0, 1.0);
   gl.clear(gl.COLOR_BUFFER_BIT);
 
-  const a_Size = gl.getAttribLocation(shaderProgram, 'aSize');
-  if (a_Size < 0) {
-    console.error('Failed to get the storage location of a_Size');
-    return;
-  }
-  gl.vertexAttrib1f(a_Size, 5.0);
   // Register an click handler
   canvas.onclick = (ev) => drawPoints(ev, gl, canvas as HTMLCanvasElement, shaderProgram);
 }
@@ -84,7 +76,7 @@ const drawPoints = (ev: MouseEvent, gl: WebGLRenderingContext, canvas: HTMLCanva
   }
   gl.vertexAttribPointer(a_Position, 2, gl.FLOAT, false, 0, 0);
   gl.enableVertexAttribArray(a_Position);
-  gl.drawArrays(gl.POINTS, 0, positions.length / 2);
+  gl.drawArrays(gl.TRIANGLES, 0, positions.length / 2);
 };
 
 // Util functions
