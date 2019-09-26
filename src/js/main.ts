@@ -1,11 +1,12 @@
+import { drawPoints } from './handlers';
+import { utils } from './utils';
 import '../scss/main.scss';
 
 const VSHADER_SOURCE = `
 attribute vec4 aVertexPosition;
-uniform vec4 uTranslation;
 varying vec4 vColor;
 void main() {
-  gl_Position = aVertexPosition + uTranslation;
+  gl_Position = aVertexPosition;
   if ( gl_Position.x < 0.0 && gl_Position.y < 0.0 ) {
     vColor = vec4(1.0, 0.0, 0.0, 1.0);
   } else if ( 0.0 < gl_Position.x && 0.0 < gl_Position.y ) {
@@ -17,24 +18,27 @@ void main() {
 `;
 const FSHADER_SOURCE = `
 precision mediump float;
+uniform vec2 uResolution;
 varying vec4 vColor;
+
 void main() {
-  gl_FragColor = vColor;
+  vec2 st = gl_FragCoord.xy / uResolution;
+  gl_FragColor = vec4(st.r, st.g, 0.0, 1.0);
 }
 `;
 
 function main() {
   // Retrieve <canvas> element
-  const canvas: HTMLElement = document.getElementById('renderCanvas');
+  const canvas = document.getElementById('renderCanvas') as HTMLCanvasElement;
 
   // Get the rendering context for WebGL
-  const gl = getWebGLContext(canvas);
+  const gl = utils.getWebGLContext(canvas);
   if (!gl) {
     console.log('Failed to get the rendering context for WebGL');
     return;
   }
 
-  const shaderProgram = initShaderProgram(gl, VSHADER_SOURCE, FSHADER_SOURCE);
+  const shaderProgram = utils.initShaderProgram(gl, VSHADER_SOURCE, FSHADER_SOURCE);
   if (!shaderProgram) {
     console.error('Failed to initialize shaders.');
     return;
@@ -43,9 +47,8 @@ function main() {
   gl.useProgram(shaderProgram);
   gl.clearColor(0.0, 0.0, 0.0, 1.0);
   gl.clear(gl.COLOR_BUFFER_BIT);
-
-  const uTranslation = gl.getUniformLocation(shaderProgram, 'uTranslation');
-  gl.uniform4f(uTranslation, 0.5, 0.5, 0.0, 0.0);
+  const uResolutionPosition = gl.getUniformLocation(shaderProgram, 'uResolution');
+  gl.uniform2f(uResolutionPosition, canvas.width, canvas.height);
   // Register an click handler
   canvas.onclick = (ev) => drawPoints(ev, gl, canvas as HTMLCanvasElement, shaderProgram);
 }
@@ -53,96 +56,3 @@ function main() {
 window.addEventListener('DOMContentLoaded', () => {{
   main();
 }});
-
-type Position = {
-  x: number,
-  y: number
-}
-const toRectPositions = (pos: Position[]): number[] => {
-  const first = pos[0];
-  const second = pos[1];
-  const v = [first.x, first.y];
-  v.push(first.x);
-  v.push(second.y);
-  v.push(second.x);
-  v.push(first.y);
-  v.push(second.x);
-  v.push(second.y);
-  return v;
-};
-let positions: Position[] = [];
-let vs: number[] = [];
-const drawPoints = (ev: MouseEvent, gl: WebGLRenderingContext, canvas: HTMLCanvasElement, program: WebGLProgram) => {
-  const rect = canvas.getBoundingClientRect() as DOMRect;
-  const glX = ((ev.clientX - rect.x) - (rect.width / 2)) / (rect.width / 2);
-  const glY = -((ev.clientY - rect.y) - (rect.height / 2)) / (rect.height / 2);
-  positions.push({x: glX, y: glY});
-  if (positions.length % 2 !== 0) {
-    return;
-  }
-  gl.clearColor(0.0, 0.0, 0.0, 1.0);
-  gl.clear(gl.COLOR_BUFFER_BIT);
-  vs = vs.concat(toRectPositions(positions));
-  positions = [];
-  const vertices = new Float32Array(vs);
-  const vertexBuffer = gl.createBuffer();
-  if (!vertexBuffer) {
-    console.error('Failed to create the buffer object');
-    return;
-  }
-  gl.bindBuffer(gl.ARRAY_BUFFER, vertexBuffer);
-  gl.bufferData(gl.ARRAY_BUFFER, vertices, gl.STATIC_DRAW);
-
-  const a_Position = gl.getAttribLocation(program, 'aVertexPosition');
-  if (a_Position < 0) {
-    console.error('Failed to get the storage location of a_Position');
-    return;
-  }
-  gl.vertexAttribPointer(a_Position, 2, gl.FLOAT, false, 0, 0);
-  gl.enableVertexAttribArray(a_Position);
-
-  for (let i=0; i < (vertices.length / 8); i++) {
-    gl.drawArrays(gl.TRIANGLE_STRIP, i * 4, 4);
-  }
-};
-
-// Util functions
-const initShaderProgram = (gl: WebGLRenderingContext, vsSource: string, fsSource: string): WebGLProgram => {
-  const vShader = loadShader(gl, gl.VERTEX_SHADER, vsSource);
-  const fShader = loadShader(gl, gl.FRAGMENT_SHADER, fsSource);
-
-  const shaderProgram = gl.createProgram();
-  gl.attachShader(shaderProgram, vShader);
-  gl.attachShader(shaderProgram, fShader);
-  gl.linkProgram(shaderProgram);
-
-  const linked = gl.getProgramParameter(shaderProgram, gl.LINK_STATUS);
-  if (!linked) {
-    console.error(`Unable to initialize the shader program: ${gl.getProgramInfoLog(shaderProgram)}`);
-    return null;
-  }
-  gl.useProgram(shaderProgram);
-  //gl.program = shaderProgram;
-  return shaderProgram;
-};
-
-const loadShader = (gl: WebGLRenderingContext, type: GLenum, source: string): WebGLShader => {
-  const shader = gl.createShader(type);
-
-  gl.shaderSource(shader, source);
-  gl.compileShader(shader);
-
-  if (!gl.getShaderParameter(shader, gl.COMPILE_STATUS)) {
-    console.error(`An error occured compiling the shaders: ${gl.getShaderInfoLog(shader)}`);
-    gl.deleteShader(shader);
-    return null;
-  }
-  return shader;
-};
-
-function getWebGLContext(canvas: HTMLElement) {
-  // Get the rendering context for WebGL
-  const gl = (canvas as HTMLCanvasElement).getContext('webgl');
-  console.log(gl);
-  return gl;
-}
