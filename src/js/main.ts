@@ -4,26 +4,41 @@ import '../scss/main.scss';
 
 const VSHADER_SOURCE = `
 attribute vec4 aVertexPosition;
-varying vec4 vColor;
 void main() {
   gl_Position = aVertexPosition;
-  if ( gl_Position.x < 0.0 && gl_Position.y < 0.0 ) {
-    vColor = vec4(1.0, 0.0, 0.0, 1.0);
-  } else if ( 0.0 < gl_Position.x && 0.0 < gl_Position.y ) {
-    vColor = vec4(0.0, 1.0, 0.0, 1.0);
-  } else {
-    vColor = vec4(1.0, 1.0, 1.0, 1.0);
-  }
 }
 `;
+
 const FSHADER_SOURCE = `
 precision mediump float;
 uniform vec2 uResolution;
-varying vec4 vColor;
+uniform vec2 uFirstPos;
+uniform vec2 uSecondPos;
+
+float chooseMin(float a, float b) {
+  if (a <= b) {
+    return a;
+  }
+  return b;
+}
+
+float chooseMax(float a, float b) {
+  if (a <= b) {
+    return b;
+  }
+  return a;
+}
 
 void main() {
-  vec2 st = gl_FragCoord.xy / uResolution;
-  gl_FragColor = vec4(st.r, st.g, 0.0, 1.0);
+  float minX = chooseMin(uFirstPos.x, uSecondPos.x);
+  float maxX = chooseMax(uFirstPos.x, uSecondPos.x);
+  float minY = chooseMin(uFirstPos.y, uSecondPos.y);
+  float maxY = chooseMax(uFirstPos.y, uSecondPos.y);
+  float width = abs(minX - maxX);
+  float height = abs(minY - maxY);
+  vec2 rst = vec2(gl_FragCoord.x - minX,  gl_FragCoord.y - (uResolution.y - maxY)) / vec2(width, height);
+
+  gl_FragColor = vec4(rst.r, rst.g, 0., 1.0);
 }
 `;
 
