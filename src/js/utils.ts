@@ -14,7 +14,6 @@ const initShaderProgram = (gl: WebGLRenderingContext, vsSource: string, fsSource
     return null;
   }
   gl.useProgram(shaderProgram);
-  //gl.program = shaderProgram;
   return shaderProgram;
 };
 

@@ -53,9 +53,10 @@ export const drawPoints = (ev: MouseEvent, gl: WebGLRenderingContext, canvas: HT
 
   for (let i=0; i < (vertices.length / 8); i++) {
     const uFirstPos = gl.getUniformLocation(program, 'uFirstPos');
-    gl.uniform2f(uFirstPos, rectPos[i*2].x, rectPos[i*2].y);
+    // Adjust a clicked coordinate to suit webgl coordinate system.
+    gl.uniform2f(uFirstPos, rectPos[i*2].x, (canvas.height - rectPos[i*2].y));
     const uSecondPos = gl.getUniformLocation(program, 'uSecondPos');
-    gl.uniform2f(uSecondPos, rectPos[i*2+1].x, rectPos[i*2+1].y);
+    gl.uniform2f(uSecondPos, rectPos[i*2+1].x, (canvas.height - rectPos[i*2+1].y));
 
     gl.drawArrays(gl.TRIANGLE_STRIP, i * 4, 4);
   }
