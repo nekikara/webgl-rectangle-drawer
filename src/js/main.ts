@@ -16,20 +16,25 @@ uniform vec2 uResolution;
 uniform vec2 uFirstPos;
 uniform vec2 uSecondPos;
 
-vec3 white = vec3(1.);
-
-int remain(int numerator, int denominator) {
-  int ans = numerator / denominator;
-  return numerator - ans * denominator;
+float fill(vec2 tl, vec2 br, vec2 p) {
+  if (tl.x <= p.x && p.x <= br.x && br.y <= p.y && p.y <= tl.y) {
+    return 1.;
+  }
+  return 0.;
 }
 
-vec3 hsb2rgb( in vec3 c ){
-    vec3 rgb = clamp(abs(mod(c.x*6.0+vec3(0.0,4.0,2.0),
-                             6.0)-3.0)-1.0,
-                     0.0,
-                     1.0 );
-    rgb = rgb*rgb*(3.0-2.0*rgb);
-    return c.z * mix( vec3(1.0), rgb, c.y);
+float sc(float left, float b, float t, vec2 p) {
+  const float width = 0.02;
+  vec2 tl = vec2(left, t);
+  vec2 br = vec2(left + width, b);
+  return fill(tl, br, p);
+}
+
+float strokeR(float b, float l, float r, vec2 p) {
+  const float width = 0.02;
+  vec2 top = vec2(l, b + width);
+  vec2 bottom = vec2(r, b);
+  return fill(top, bottom, p);
 }
 
 void main() {
@@ -44,13 +49,22 @@ void main() {
   float height = abs(minY - maxY);
   vec2 rst = vec2(gl_FragCoord.x - minX,  gl_FragCoord.y - minY) / vec2(width, height);
   
-  vec2 c = rst - vec2(0.5);
-  float angle = atan(c.y, c.x);
-  float radius = distance(rst, center);
-  float h = 1.- pow(sin((TWO_PI / 2.) * (angle / TWO_PI  - 1.5) / 2. ), 1.5);
-  vec3 colorA = hsb2rgb(vec3( h, radius * 2., 1.0 ));
+  vec3 background = vec3(1.);
+  // Colors
+  background = mix(background, vec3(1., 0., 0.), fill(vec2(0., 1.), vec2(0.25, 0.75), rst));
+  background = mix(background, vec3(1., 1., 0.), fill(vec2(0.95, 1.), vec2(1., 0.75), rst));
+  background = mix(background, vec3(0., 0., 1.), fill(vec2(0.8, 0.15), vec2(1., 0.), rst));
   
-  vec3 background = mix(colorA, white, step(0.45, radius));
+  // Columns
+  background = mix(background, vec3(0.), sc(0.25, 0., 1., rst));
+  background = mix(background, vec3(0.), sc(0.1, 0.75, 1.0, rst));
+  background = mix(background, vec3(0.), sc(0.8, 0., 1.0, rst));
+  background = mix(background, vec3(0.), sc(0.95, 0., 1.0, rst));
+  // Rows
+  background = mix(background, vec3(0.), strokeR(0.15, 0.25, 1., rst));
+  background = mix(background, vec3(0.), strokeR(0.75, 0., 1., rst));
+  background = mix(background, vec3(0.), strokeR(0.9, 0., 1., rst));
+  
   gl_FragColor = vec4(background, 1.);
 }
 `;
@@ -73,7 +87,7 @@ function main() {
   }
 
   gl.useProgram(shaderProgram);
-  gl.clearColor(0.0, 0.0, 0.0, 1.0);
+  gl.clearColor(0.5, 0.5, 0.5, 1.0);
   gl.clear(gl.COLOR_BUFFER_BIT);
   const uResolutionPosition = gl.getUniformLocation(shaderProgram, 'uResolution');
   gl.uniform2f(uResolutionPosition, canvas.width, canvas.height);

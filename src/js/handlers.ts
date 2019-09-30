@@ -29,7 +29,7 @@ export const drawPoints = (ev: MouseEvent, gl: WebGLRenderingContext, canvas: HT
   if (positions.length % 2 !== 0) {
     return;
   }
-  gl.clearColor(0.0, 0.0, 0.0, 1.0);
+  gl.clearColor(0.5, 0.5, 0.5, 1.0);
   gl.clear(gl.COLOR_BUFFER_BIT);
   vs = vs.concat(toRectPositions(positions));
   positions = [];
