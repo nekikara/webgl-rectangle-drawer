@@ -16,27 +16,6 @@ uniform vec2 uResolution;
 uniform vec2 uFirstPos;
 uniform vec2 uSecondPos;
 
-float fill(vec2 tl, vec2 br, vec2 p) {
-  if (tl.x <= p.x && p.x <= br.x && br.y <= p.y && p.y <= tl.y) {
-    return 1.;
-  }
-  return 0.;
-}
-
-float sc(float left, float b, float t, vec2 p) {
-  const float width = 0.02;
-  vec2 tl = vec2(left, t);
-  vec2 br = vec2(left + width, b);
-  return fill(tl, br, p);
-}
-
-float strokeR(float b, float l, float r, vec2 p) {
-  const float width = 0.02;
-  vec2 top = vec2(l, b + width);
-  vec2 bottom = vec2(r, b);
-  return fill(top, bottom, p);
-}
-
 void main() {
   const vec2 center = vec2(0.5);
 
@@ -49,21 +28,11 @@ void main() {
   float height = abs(minY - maxY);
   vec2 rst = vec2(gl_FragCoord.x - minX,  gl_FragCoord.y - minY) / vec2(width, height);
   
-  vec3 background = vec3(1.);
-  // Colors
-  background = mix(background, vec3(1., 0., 0.), fill(vec2(0., 1.), vec2(0.25, 0.75), rst));
-  background = mix(background, vec3(1., 1., 0.), fill(vec2(0.95, 1.), vec2(1., 0.75), rst));
-  background = mix(background, vec3(0., 0., 1.), fill(vec2(0.8, 0.15), vec2(1., 0.), rst));
+  rst = rst * 2. - 1.;
   
-  // Columns
-  background = mix(background, vec3(0.), sc(0.25, 0., 1., rst));
-  background = mix(background, vec3(0.), sc(0.1, 0.75, 1.0, rst));
-  background = mix(background, vec3(0.), sc(0.8, 0., 1.0, rst));
-  background = mix(background, vec3(0.), sc(0.95, 0., 1.0, rst));
-  // Rows
-  background = mix(background, vec3(0.), strokeR(0.15, 0.25, 1., rst));
-  background = mix(background, vec3(0.), strokeR(0.75, 0., 1., rst));
-  background = mix(background, vec3(0.), strokeR(0.9, 0., 1., rst));
+  float r = .09;
+  float len = length( max(abs(rst) - ( 0.99 - r ), 0.) );
+  vec3 background = vec3( smoothstep(r - 0.02, r, len) * smoothstep(r + 0.02, r, len) );
   
   gl_FragColor = vec4(background, 1.);
 }
