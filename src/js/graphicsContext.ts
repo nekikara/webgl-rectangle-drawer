@@ -1,11 +1,14 @@
 import {utils} from "./utils";
 import {Beam} from "./building-blocks/beam";
+import {ShaderPairs} from "./shaderPairs";
+import {ShaderPair} from "./shaderPair";
 
 type Position = {
     x: number,
     y: number
 };
 type Vertices = Float32Array;
+type ShaderPrograms = Map<string, WebGLProgram>;
 const toRectPositions = (pos: Position[]): Vertices => {
     const first = pos[0];
     const second = pos[1];
@@ -19,34 +22,33 @@ const toRectPositions = (pos: Position[]): Vertices => {
     return new Float32Array(v);
 };
 export class GraphicsContext {
-    static create(canvas: HTMLCanvasElement): GraphicsContext {
+    static create(canvas: HTMLCanvasElement, shaderPairs: ShaderPairs): GraphicsContext {
         // Get the rendering context for WebGL
         const gl = utils.getWebGLContext(canvas);
         if (!gl) {
             console.log('Failed to get the rendering context for WebGL');
             return;
         }
-        return new GraphicsContext(canvas, gl);
+        return new GraphicsContext(canvas, gl, shaderPairs);
     }
 
     private _gl: WebGLRenderingContext;
     private _canvas: HTMLCanvasElement;
+    private _shaderPrograms: ShaderPrograms;
 
-    constructor(canvas: HTMLCanvasElement, gl: WebGLRenderingContext) {
+    constructor(canvas: HTMLCanvasElement, gl: WebGLRenderingContext, shaderPairs: ShaderPairs) {
         this._canvas = canvas;
         this._gl = gl;
+        this._shaderPrograms = shaderPairs.pairs.reduce((acc: ShaderPrograms, sp: ShaderPair) => {
+            acc.set(sp.name, utils.initShaderProgram(this._gl, sp.vShader, sp.fShader));
+            return acc;
+        }, (new Map() as ShaderPrograms));
     }
 
     draw(beam: Beam): void {
         this.clearBackgroundColor();
-        const shaderProgram = utils.initShaderProgram(this._gl, beam.vShader, beam.fShader);
-        if (!shaderProgram) {
-            console.error('Failed to initialize shaders.');
-            return;
-        }
-        const uResolutionPosition = this._gl.getUniformLocation(shaderProgram, 'uResolution');
-        this._gl.uniform2f(uResolutionPosition, this._canvas.width, this._canvas.height);
-
+        const shaderProgram = this._shaderPrograms.get(beam.shaderName);
+        this._gl.useProgram(shaderProgram);
         const vertexBuffer = this._gl.createBuffer();
         if (!vertexBuffer) {
             console.error('Failed to create the buffer object');

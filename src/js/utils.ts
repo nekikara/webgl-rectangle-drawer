@@ -13,7 +13,6 @@ const initShaderProgram = (gl: WebGLRenderingContext, vsSource: string, fsSource
     console.error(`Unable to initialize the shader program: ${gl.getProgramInfoLog(shaderProgram)}`);
     return null;
   }
-  gl.useProgram(shaderProgram);
   return shaderProgram;
 };
 

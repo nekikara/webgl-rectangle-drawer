@@ -1,0 +1,23 @@
+export type ShaderPair = {
+    name: string,
+    vShader: string,
+    fShader: string
+};
+
+export const fulfilPair = (): ShaderPair => {
+    return {
+        name: 'fulfil',
+        vShader: `
+attribute vec4 aVertexPosition;
+void main() {
+  gl_Position = aVertexPosition;
+}
+        `,
+        fShader: `
+precision mediump float;
+void main() {
+  gl_FragColor = vec4(0., 0., 0., 1.);
+}
+        `
+    }
+};
