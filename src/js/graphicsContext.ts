@@ -66,12 +66,6 @@ export class GraphicsContext {
         this._gl.vertexAttribPointer(a_Position, 2, this._gl.FLOAT, false, 0, 0);
         this._gl.enableVertexAttribArray(a_Position);
 
-        const uFirstPos = this._gl.getUniformLocation(shaderProgram, 'uFirstPos');
-        // Adjust a clicked coordinate to suit webgl coordinate system.
-        this._gl.uniform2f(uFirstPos, beam.leftX, beam.leftY);
-        const uSecondPos = this._gl.getUniformLocation(shaderProgram, 'uSecondPos');
-        this._gl.uniform2f(uSecondPos, beam.rightX, beam.rightY);
-
         this._gl.drawArrays(this._gl.TRIANGLE_STRIP, 0, 4);
     }
 
