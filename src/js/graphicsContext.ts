@@ -44,8 +44,6 @@ export class GraphicsContext {
             console.error('Failed to initialize shaders.');
             return;
         }
-        this._gl.useProgram(shaderProgram);
-
         const uResolutionPosition = this._gl.getUniformLocation(shaderProgram, 'uResolution');
         this._gl.uniform2f(uResolutionPosition, this._canvas.width, this._canvas.height);
 
