@@ -1,26 +1,8 @@
 import {utils} from "./utils";
-import {Beam} from "./building-blocks/beam";
 import {ShaderPairs} from "./shaderPairs";
 import {ShaderPair} from "./shaderPair";
 
-type Position = {
-    x: number,
-    y: number
-};
-type Vertices = Float32Array;
 type ShaderPrograms = Map<string, WebGLProgram>;
-const toRectPositions = (pos: Position[]): Vertices => {
-    const first = pos[0];
-    const second = pos[1];
-    const v = [first.x, first.y];
-    v.push(first.x);
-    v.push(second.y);
-    v.push(second.x);
-    v.push(first.y);
-    v.push(second.x);
-    v.push(second.y);
-    return new Float32Array(v);
-};
 export class GraphicsContext {
     static create(canvas: HTMLCanvasElement, shaderPairs: ShaderPairs): GraphicsContext {
         // Get the rendering context for WebGL
@@ -45,42 +27,54 @@ export class GraphicsContext {
         }, (new Map() as ShaderPrograms));
     }
 
-    draw(beam: Beam): void {
-        this.clearBackgroundColor();
-        const shaderProgram = this._shaderPrograms.get(beam.shaderName);
-        this._gl.useProgram(shaderProgram);
+    getShader(shaderName: string): WebGLProgram {
+        return this._shaderPrograms.get(shaderName);
+    }
+
+    useProgram(program: WebGLProgram): void {
+        this._gl.useProgram(program);
+    }
+
+    canvasSize(): {width: number, height: number} {
+        return {
+            width: this._canvas.width,
+            height: this._canvas.height,
+        }
+    }
+
+    bindBufferData(vertices: Float32Array): WebGLBuffer {
         const vertexBuffer = this._gl.createBuffer();
         if (!vertexBuffer) {
             console.error('Failed to create the buffer object');
             return;
         }
         this._gl.bindBuffer(this._gl.ARRAY_BUFFER, vertexBuffer);
-        const vertices = this.mapToVertices(beam);
         this._gl.bufferData(this._gl.ARRAY_BUFFER, vertices, this._gl.STATIC_DRAW);
-
-        const a_Position = this._gl.getAttribLocation(shaderProgram, 'aVertexPosition');
-        if (a_Position < 0) {
+        return vertexBuffer;
+    }
+    deleteBuffer(buffer: WebGLBuffer): void {
+        this._gl.deleteBuffer(buffer);
+    }
+    enableVertexAttribArray(program: WebGLProgram, name: string): GLuint {
+        const aAttribPosition = this._gl.getAttribLocation(program, name);
+        if (aAttribPosition < 0) {
             console.error('Failed to get the storage location of a_Position');
             return;
         }
-        this._gl.vertexAttribPointer(a_Position, 2, this._gl.FLOAT, false, 0, 0);
-        this._gl.enableVertexAttribArray(a_Position);
+        this._gl.vertexAttribPointer(aAttribPosition, 2, this._gl.FLOAT, false, 0, 0);
+        this._gl.enableVertexAttribArray(aAttribPosition);
+        return aAttribPosition;
+    }
+    disableVertexAttribArray(index: GLuint): void {
+        this._gl.disableVertexAttribArray(index);
+    }
 
-        this._gl.drawArrays(this._gl.TRIANGLE_STRIP, 0, 4);
+    drawArrays(first: number, count: number) {
+        this._gl.drawArrays(this._gl.TRIANGLE_STRIP, first, count);
     }
 
     clearBackgroundColor(): void {
         this._gl.clearColor(0.5, 0.5, 0.5, 1.0);
         this._gl.clear(this._gl.COLOR_BUFFER_BIT);
-    }
-    private mapToVertices(beam: Beam): Vertices {
-        const rect = this._canvas.getBoundingClientRect() as DOMRect;
-        const lglX = (beam.leftX - (rect.width / 2)) / (rect.width / 2);
-        const lglY = (beam.leftY - (rect.height / 2)) / (rect.height / 2);
-        const leftPosition: Position = {x: lglX, y: lglY};
-        const rglX = (beam.rightX - (rect.width / 2)) / (rect.width / 2);
-        const rglY = (beam.rightY - (rect.height / 2)) / (rect.height / 2);
-        const rightPosition: Position = {x: rglX, y: rglY};
-        return toRectPositions([leftPosition, rightPosition]);
     }
 }
