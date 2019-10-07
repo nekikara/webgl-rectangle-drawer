@@ -4,9 +4,9 @@ export type ShaderPair = {
     fShader: string
 };
 
-export const fulfilPair = (): ShaderPair => {
+export const fulfillPair = (): ShaderPair => {
     return {
-        name: 'fulfil',
+        name: 'fulfill',
         vShader: `
 attribute vec4 aVertexPosition;
 void main() {

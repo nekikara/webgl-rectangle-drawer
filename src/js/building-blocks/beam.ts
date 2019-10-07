@@ -17,7 +17,7 @@ export class Beam {
     private readonly _shaderName: string;
 
     constructor() {
-        this._shaderName = 'fulfil';
+        this._shaderName = 'fulfill';
     }
 
     get shaderName(): string {

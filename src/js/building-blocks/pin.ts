@@ -10,7 +10,7 @@ export class Pin {
     private readonly _topCenter: Position;
 
     constructor(position: Position) {
-        this._shaderName = 'triangle-fulfill';
+        this._shaderName = 'fulfill';
         this._topCenter = position;
     }
 

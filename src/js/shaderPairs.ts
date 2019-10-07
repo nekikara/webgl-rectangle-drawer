@@ -4,7 +4,7 @@ type ShaderPairName = string;
 export class ShaderPairs {
     static select(shaderNames: ShaderPairName[]): ShaderPairs {
         const pairs = [
-            ShaderPair.fulfilPair(),
+            ShaderPair.fulfillPair(),
             ShaderPair.triangleFulFillPair()
         ].filter((shaderPair: ShaderPair.ShaderPair) => {
             const result = shaderNames.indexOf(shaderPair.name);

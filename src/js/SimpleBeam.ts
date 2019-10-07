@@ -5,7 +5,7 @@ import {Pin} from "./building-blocks/pin";
 
 export class SimpleBeam {
     static draw(canvas: HTMLCanvasElement): void {
-        const shaderPairs = ShaderPairs.select(['fulfil', 'triangle-fulfill']);
+        const shaderPairs = ShaderPairs.select(['fulfill', 'triangle-fulfill']);
         const gc = GraphicsContext.create(canvas, shaderPairs);
         gc.clearBackgroundColor();
         const beam = Beam.default();
