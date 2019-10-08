@@ -21,21 +21,3 @@ void main() {
         `
     }
 };
-
-export const triangleFulFillPair = (): ShaderPair => {
-    return {
-        name: 'triangle-fulfill',
-        vShader: `
-attribute vec4 aVertexPosition;
-void main() {
-  gl_Position = aVertexPosition;
-}
-        `,
-        fShader: `
-precision mediump float;
-void main() {
-  gl_FragColor = vec4(1., 0., 0., 1.);
-}
-        `
-    }
-};

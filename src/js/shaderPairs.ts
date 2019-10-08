@@ -5,7 +5,6 @@ export class ShaderPairs {
     static select(shaderNames: ShaderPairName[]): ShaderPairs {
         const pairs = [
             ShaderPair.fulfillPair(),
-            ShaderPair.triangleFulFillPair()
         ].filter((shaderPair: ShaderPair.ShaderPair) => {
             const result = shaderNames.indexOf(shaderPair.name);
             return result !== -1;
