@@ -3,6 +3,7 @@ import { Beam } from "./building-blocks/beam";
 import { ShaderPairs } from "./shaderPairs";
 import {Pin} from "./building-blocks/pin";
 import { Roller } from "./building-blocks/roller";
+import {ContentratedLoad} from "./building-blocks/contentratedLoad";
 
 export class SimpleBeam {
     static draw(canvas: HTMLCanvasElement): void {
@@ -17,5 +18,8 @@ export class SimpleBeam {
 
         const roller = Roller.default(beam.rightBottom);
         roller.draw(gc);
+
+        const load = ContentratedLoad.default(beam.centerTop);
+        load.draw(gc);
     }
 }

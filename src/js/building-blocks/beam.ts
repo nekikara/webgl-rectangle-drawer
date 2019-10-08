@@ -42,6 +42,9 @@ export class Beam {
     get rightBottom(): Position {
         return { x: this.rightX, y: this.rightY };
     }
+    get centerTop(): Position {
+        return { x: (this.rightX + this.leftX) / 2, y: this.leftY };
+    }
 
     private positionsOnGL(canvasSize: {width: number, height: number}): number[] {
         const w = canvasSize.width;
