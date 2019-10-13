@@ -21,5 +21,6 @@ export class SimpleBeam {
 
         const load = ContentratedLoad.default(beam.centerTop);
         load.draw(gc);
+        requestAnimationFrame(() => {this.draw(canvas)});
     }
 }

@@ -7,6 +7,7 @@ export class GraphicsContext {
     static create(canvas: HTMLCanvasElement, shaderPairs: ShaderPairs): GraphicsContext {
         // Get the rendering context for WebGL
         const gl = utils.getWebGLContext(canvas);
+        gl.viewport(0, 0, gl.drawingBufferWidth, gl.drawingBufferHeight);
         if (!gl) {
             console.log('Failed to get the rendering context for WebGL');
             return;
