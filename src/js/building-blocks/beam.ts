@@ -1,10 +1,8 @@
-import { GraphicsContext } from "../graphicsContext";
-import { Position } from "../position";
+import { Canvas } from "../canvas";
+import { Display } from "../display";
+import { Point } from "../glField";
 
 export class Beam {
-    static default(): Beam {
-        return new Beam();
-    }
     static positions(lx: number, ly: number, rx: number, ry: number): number[] {
         return [
             lx, ly,
@@ -14,57 +12,47 @@ export class Beam {
         ];
     };
 
-    private readonly _shaderName: string;
+    private readonly _leftX: Display.Pixel;
+    private readonly _rightX: Display.Pixel;
+    private readonly _bottomY: Display.Pixel;
 
-    constructor() {
-        this._shaderName = 'fulfill';
-    }
+    private readonly _topGLY: Point;
+    private readonly _bottomGLY: Point;
+    private readonly _leftGLX: Point;
+    private readonly _rightGLX: Point;
 
-    get shaderName(): string {
-        return this._shaderName;
+    constructor(cvs: Canvas, l: number, r: number) {
+        this._leftX = cvs.center.x - (cvs.unitL * l);
+        this._rightX = cvs.center.x + (cvs.unitL * r);
+        this._bottomY = (cvs.center.y - cvs.unitH * 1.5);
+        const halfW = cvs.width / 2;
+        const halfH = cvs.height / 2;
+        this._leftGLX = (this._leftX - halfW) / halfW;
+        this._rightGLX = (this._rightX - halfW) / halfW;
+        this._topGLY = (cvs.center.y - halfH) / halfH;
+        this._bottomGLY = (this._bottomY - halfH) / halfH;
     }
-    get leftX(): number {
-        return 100.0;
+    get leftEdge(): Display.Position {
+        return {
+            x: this._leftX,
+            y: this._bottomY
+        };
     }
-    get leftY(): number {
-        return 210.0;
-    }
-
-    get leftBottom(): Position {
-        return { x: this.leftX, y: this.rightY };
-    }
-    get rightX(): number {
-        return 300.0;
-    }
-    get rightY(): number {
-        return 190.0;
-    }
-    get rightBottom(): Position {
-        return { x: this.rightX, y: this.rightY };
-    }
-    get centerTop(): Position {
-        return { x: (this.rightX + this.leftX) / 2, y: this.leftY };
-    }
-
-    private positionsOnGL(canvasSize: {width: number, height: number}): number[] {
-        const w = canvasSize.width;
-        const h = canvasSize.height;
-        const lglX = (this.leftX - (w / 2)) / (w / 2);
-        const lglY = (this.leftY - (h / 2)) / (h / 2);
-        const rglX = (this.rightX - (w / 2)) / (w / 2);
-        const rglY = (this.rightY - (h / 2)) / (h / 2);
-        return Beam.positions(lglX, lglY, rglX, rglY);
+    get rightEdge(): Display.Position {
+        return {
+            x: this._rightX,
+            y: this._bottomY
+        };
     }
 
-    draw(gc: GraphicsContext): void {
-        const shaderProgram = gc.getShader(this.shaderName);
-        gc.useProgram(shaderProgram);
-        const pos = this.positionsOnGL(gc.canvasSize());
-        const buffer = gc.bindBufferData(new Float32Array(pos));
-        const posIndex = gc.enableVertexAttribArray(shaderProgram, 'aVertexPosition');
-        gc.drawArrays(0, 4);
-        gc.deleteBuffer(buffer);
-        gc.disableVertexAttribArray(posIndex);
+    shaderName(): string {
+        return 'fulfill';
+    }
+    vertices(): number[] {
+        return Beam.positions(this._leftGLX, this._topGLY, this._rightGLX, this._bottomGLY);
+    }
+    indices(): number[] {
+        return [0, 1, 2, 2, 1, 3];
     }
 }
 

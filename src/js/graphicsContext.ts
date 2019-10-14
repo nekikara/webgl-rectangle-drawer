@@ -28,6 +28,16 @@ export class GraphicsContext {
         }, (new Map() as ShaderPrograms));
     }
 
+    get width(): number {
+        return this._canvas.width;
+    }
+    get height(): number {
+        return this._canvas.height;
+    }
+    get gl(): WebGLRenderingContext {
+        return this._gl;
+    }
+
     getShader(shaderName: string): WebGLProgram {
         return this._shaderPrograms.get(shaderName);
     }
@@ -44,14 +54,27 @@ export class GraphicsContext {
     }
 
     bindBufferData(vertices: Float32Array): WebGLBuffer {
-        const vertexBuffer = this._gl.createBuffer();
-        if (!vertexBuffer) {
-            console.error('Failed to create the buffer object');
+        return this.bindBuffer(this._gl.ARRAY_BUFFER, vertices);
+    }
+    bindIndexBufferData(indices: Uint8Array): WebGLBuffer  {
+        return this.bindBuffer(this._gl.ELEMENT_ARRAY_BUFFER, indices);
+    }
+    bindBuffer(type: number, data: Float32Array | Uint8Array | null): WebGLBuffer | null {
+        const buffer = this.createBuffer();
+        if (buffer) {
+            this._gl.bindBuffer(type, buffer);
+            this._gl.bufferData(type, data, this._gl.STATIC_DRAW);
+            return buffer;
+        }
+        return null;
+    }
+    createBuffer(): WebGLBuffer {
+        const buffer = this._gl.createBuffer();
+        if (!buffer) {
+            console.error('Failed to create the index buffer object');
             return;
         }
-        this._gl.bindBuffer(this._gl.ARRAY_BUFFER, vertexBuffer);
-        this._gl.bufferData(this._gl.ARRAY_BUFFER, vertices, this._gl.STATIC_DRAW);
-        return vertexBuffer;
+        return buffer;
     }
     deleteBuffer(buffer: WebGLBuffer): void {
         this._gl.deleteBuffer(buffer);
@@ -69,11 +92,12 @@ export class GraphicsContext {
     disableVertexAttribArray(index: GLuint): void {
         this._gl.disableVertexAttribArray(index);
     }
-
     drawArrays(first: number, count: number) {
         this._gl.drawArrays(this._gl.TRIANGLE_STRIP, first, count);
     }
-
+    drawElements(n: number, offset: number) {
+        this._gl.drawElements(this._gl.TRIANGLES, n, this._gl.UNSIGNED_BYTE, offset);
+    }
     clearBackgroundColor(): void {
         this._gl.clearColor(0.5, 0.5, 0.5, 1.0);
         this._gl.clear(this._gl.COLOR_BUFFER_BIT);

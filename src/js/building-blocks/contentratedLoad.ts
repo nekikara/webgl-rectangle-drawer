@@ -1,5 +1,5 @@
 import { GraphicsContext } from "../graphicsContext";
-import { Position } from "../position";
+import { Position } from "../display";
 
 export class ContentratedLoad {
     static default(position: Position): ContentratedLoad {

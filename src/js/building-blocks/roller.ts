@@ -1,78 +1,51 @@
-import { GraphicsContext } from "../graphicsContext";
-import { Position } from "../position";
+import { Display } from "../display";
+import {Point} from "../glField";
+import {Canvas} from "../canvas";
 
 export class Roller {
-    static default(position: Position): Roller {
-        return new Roller(position);
-    }
+    private readonly _centerGLX: Point;
+    private readonly _centerGLY: Point;
+    private readonly _bottomGLY: Point;
+    private readonly _leftGLX: Point;
+    private readonly _rightGLX: Point;
+    private readonly _rollerTopGLY: Point;
+    private readonly _rollerBottomGLY: Point;
 
-    private readonly _shaderName: string;
-    private readonly _topCenter: Position;
+    constructor(cvs: Canvas, center: Display.Position, rateW: number ,rateH: number) {
+        const leftX = center.x - (cvs.unitL * rateW / 2);
+        const rightX = center.x + (cvs.unitL * rateW / 2);
+        const bottomY = (cvs.center.y - (cvs.unitH * rateH));
+        const halfW = cvs.width / 2;
+        const halfH = cvs.height / 2;
+        this._centerGLX = (center.x - halfW) / halfW;
+        this._centerGLY = (center.y - halfH) / halfH;
+        this._bottomGLY = (bottomY - halfH) / halfH;
+        this._leftGLX = (leftX - halfW) / halfW;
+        this._rightGLX = (rightX - halfW) / halfW;
+        this._rollerTopGLY = this._bottomGLY - (this._centerGLY - this._bottomGLY) * 0.1;
+        this._rollerBottomGLY = this._rollerTopGLY - (this._centerGLY - this._bottomGLY) * 0.15;
 
-    constructor(position: Position) {
-        this._shaderName = 'fulfill';
-        this._topCenter = position;
     }
-
-    get shaderName(): string {
-        return this._shaderName;
+    shaderName(): string {
+        return 'fulfill';
     }
-
-    get centerX(): number {
-        return this._topCenter.x;
-    }
-    get centerY(): number {
-        return this._topCenter.y;
-    }
-    get leftX(): number {
-        return this._topCenter.x - 12.5;
-    }
-    get rightX(): number {
-        return this._topCenter.x + 12.5;
-    }
-    get bottomY(): number {
-        return this._topCenter.y - 25;
-    }
-    get rollerTop(): number {
-        return this.bottomY - 2;
-    }
-    get rollerBottom(): number {
-        return this.rollerTop - 3;
-    }
-
-    private positionsOnGL(canvasSize: {width: number, height: number}): number[] {
-        const w = canvasSize.width;
-        const h = canvasSize.height;
-        const cX = (this.centerX - (w / 2)) / (w / 2);
-        const cY = (this.centerY - (h / 2)) / (h / 2);
-        const lglX = (this.leftX - (w / 2)) / (w / 2);
-        const lglY = (this.bottomY - (h / 2)) / (h / 2);
-        const rglX = (this.rightX - (w / 2)) / (w / 2);
-        const rglY = (this.bottomY - (h / 2)) / (h / 2);
-        const rTop = (this.rollerTop - (h / 2)) / (h /2 );
-        const rBottom = (this.rollerBottom - (h / 2)) / (h /2 );
-
+    vertices(): number[] {
         return [
-            cX, cY,
-            lglX, lglY,
-            rglX, rglY,
-            lglX, rTop,
-            lglX, rBottom,
-            rglX, rTop,
-            rglX, rBottom,
+            this._centerGLX, this._centerGLY,
+            this._leftGLX, this._bottomGLY,
+            this._rightGLX, this._bottomGLY,
+            this._leftGLX, this._rollerTopGLY,
+            this._leftGLX, this._rollerBottomGLY,
+            this._rightGLX, this._rollerTopGLY,
+            this._rightGLX, this._rollerBottomGLY,
         ];
     }
-
-    draw(gc: GraphicsContext): void {
-        const shaderProgram = gc.getShader(this.shaderName);
-        gc.useProgram(shaderProgram);
-        const pos = this.positionsOnGL(gc.canvasSize());
-        const buffer = gc.bindBufferData(new Float32Array(pos));
-        const posIndex = gc.enableVertexAttribArray(shaderProgram, 'aVertexPosition');
-        gc.drawArrays(0, 3);
-        gc.drawArrays(3, 4);
-        gc.deleteBuffer(buffer);
-        gc.disableVertexAttribArray(posIndex);
+    indices(): number[] {
+        return [
+            0, 1, 2,
+            3, 4, 5,
+            5, 4, 6,
+        ];
     }
 }
 
