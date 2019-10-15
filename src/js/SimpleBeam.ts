@@ -4,6 +4,7 @@ import { Beam } from "./building-blocks/beam";
 import { ShaderPairs } from "./shaderPairs";
 import {Pin} from "./building-blocks/pin";
 import { Roller } from "./building-blocks/roller";
+import {ConcentratedLoad} from "./building-blocks/concentratedLoad";
 
 type RenderingData = {
     shaderSetName: string,
@@ -33,11 +34,13 @@ export class SimpleBeam {
         const beam = new Beam(cvs, l, r);
         const pin = new Pin(cvs, beam.leftEdge, 0.5, 3);
         const roller = new Roller(cvs, beam.rightEdge, 0.5, 3);
+        const load = new ConcentratedLoad(cvs, power);
 
         this._db.set('beam', this.getRenderingData(beam));
         this._db.set('pin', this.getRenderingData(pin));
         this._db.set('roller', this.getRenderingData(roller));
-        this._order = ['beam', 'pin', 'roller'];
+        this._db.set('load', this.getRenderingData(load));
+        this._order = ['beam', 'pin', 'roller', 'load'];
     }
 
     draw(): void {
