@@ -8,10 +8,9 @@ import {ConcentratedLoad} from "./building-blocks/concentratedLoad";
 
 type RenderingData = {
     shaderSetName: string,
-    vertexBuffer: WebGLBuffer,
     vertices: Float32Array,
-    indexBuffer: WebGLBuffer,
     indices: Uint8Array,
+    groupId: number,
 };
 type Material = "beam" | "pin" | "roller" | "load";
 type DB = Map<Material, RenderingData>;
@@ -30,12 +29,20 @@ export class SimpleBeam {
     readonly framebuffer: WebGLFramebuffer;
     readonly offscreenLoc: WebGLUniformLocation;
     readonly pickingColorLoc: WebGLUniformLocation;
+    readonly objectColorLoc: WebGLUniformLocation;
+    readonly vertexBuffer: WebGLBuffer;
+    readonly indexBuffer: WebGLBuffer;
+    private _clicked: number | null;
 
     constructor(canvas: HTMLCanvasElement, power: number, l: number, r: number) {
         const cvs = new Canvas(canvas.width, canvas.height);
         const shaderPairs = ShaderPairs.select(['fulfill']);
         this._gc = GraphicsContext.create(canvas, shaderPairs);
         const gl = this._gc.gl;
+
+        // Initialize buffers for vertex and indices
+        this.vertexBuffer = this._gc.createBuffer();
+        this.indexBuffer = this._gc.createBuffer();
 
         // Prepare for clickable building blocks
         const shader = this._gc.getShader('fulfill');
@@ -44,6 +51,7 @@ export class SimpleBeam {
         gl.enable(gl.DEPTH_TEST);
         this.offscreenLoc = gl.getUniformLocation( shader, 'uOffscreen' );
         this.pickingColorLoc = gl.getUniformLocation( shader, 'uPickingColor' );
+        this.objectColorLoc = gl.getUniformLocation( shader, 'uObjectColor' );
 
         this.texture = gl.createTexture();
         gl.bindTexture(gl.TEXTURE_2D, this.texture);
@@ -68,7 +76,7 @@ export class SimpleBeam {
             gl.bindFramebuffer(gl.FRAMEBUFFER, this.framebuffer);
             gl.readPixels(pos.x, pos.y, 1, 1, gl.RGBA, gl.UNSIGNED_BYTE, readout);
             gl.bindFramebuffer(gl.FRAMEBUFFER, null);
-            console.log(readout);
+            this._clicked =  this.getRenderingID(readout);
         };
 
         // Initialize building blocks
@@ -78,10 +86,10 @@ export class SimpleBeam {
         const load = new ConcentratedLoad(cvs, power);
 
         // Set to rendering data
-        this._db.set('beam', this.getRenderingData(beam));
-        this._db.set('pin', this.getRenderingData(pin));
-        this._db.set('roller', this.getRenderingData(roller));
-        this._db.set('load', this.getRenderingData(load));
+        this._db.set('beam', this.getRenderingData(beam, 1));
+        this._db.set('pin', this.getRenderingData(pin, 1));
+        this._db.set('roller', this.getRenderingData(roller, 1));
+        this._db.set('load', this.getRenderingData(load, 2));
         this._order = ['beam', 'pin', 'roller', 'load'];
     }
 
@@ -93,14 +101,19 @@ export class SimpleBeam {
             const data = this._db.get(order);
             const shaderProgram = this._gc.getShader(data.shaderSetName);
             this._gc.useProgram(shaderProgram);
-            gl.uniform4fv(this.pickingColorLoc, [0, 0, 0, (index + 1) / 255]);
+            gl.uniform4fv(this.pickingColorLoc, this.extractGroupID(data.groupId));
+            if ( data.groupId == this._clicked ) {
+                gl.uniform4fv(this.objectColorLoc, [0.8, 0.8, 0.8, 1.0]);
+            } else {
+                gl.uniform4fv(this.objectColorLoc, [0, 0, 0, 1.0]);
+            }
             // Bind vertices
-            gl.bindBuffer(gl.ARRAY_BUFFER, data.vertexBuffer);
+            gl.bindBuffer(gl.ARRAY_BUFFER, this.vertexBuffer);
             gl.bufferData(gl.ARRAY_BUFFER, data.vertices, gl.STATIC_DRAW);
-            // Bind indices
-            gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, data.indexBuffer);
-            gl.bufferData(gl.ELEMENT_ARRAY_BUFFER, data.indices, gl.STATIC_DRAW);
             this._gc.enableVertexAttribArray(shaderProgram, 'aVertexPosition');
+            // Bind indices
+            gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, this.indexBuffer);
+            gl.bufferData(gl.ELEMENT_ARRAY_BUFFER, data.indices, gl.STATIC_DRAW);
             this._gc.drawElements(data.indices.length, 0);
             // Unbind vertices and indices
             gl.bindBuffer(gl.ARRAY_BUFFER, null);
@@ -127,14 +140,23 @@ export class SimpleBeam {
         requestAnimationFrame((x: number) => {this.listen(x)})
     }
 
-    private getRenderingData(building: any): RenderingData {
+    private getRenderingData(building: any, groupId: number): RenderingData {
         return {
             shaderSetName: building.shaderName(),
-            vertexBuffer: this._gc.createBuffer(),
             vertices: new Float32Array(building.vertices()),
-            indexBuffer: this._gc.createBuffer(),
             indices: new Uint8Array(building.indices()),
+            groupId
         }
+    }
+    private extractGroupID(groupId: number): number[] {
+        let id = groupId;
+        let color = [];
+        for (let i=0; i < 4; i++) {
+            color.unshift((id % 255) / 255);
+            id = Math.floor(id / 255);
+        }
+        return color;
+
     }
     private get2DCoords(event: MouseEvent, canvasOrigin: HTMLCanvasElement) {
         let top = 0,
@@ -154,5 +176,12 @@ export class SimpleBeam {
             x: event.clientX - left,
             y: canvasOrigin.height - (event.clientY - top)
         };
+    }
+
+    private getRenderingID(position: Uint8Array): number {
+        return position[0] * Math.pow(255, 3) +
+            position[1] * Math.pow(255, 2) +
+            position[2] * Math.pow(255, 1) +
+            position[3];
     }
 }

@@ -16,12 +16,13 @@ void main() {
         fShader: `
 precision mediump float;
 uniform vec4 uPickingColor;
+uniform vec4 uObjectColor;
 uniform bool uOffscreen;
 void main() {
   if (uOffscreen) {
     gl_FragColor = uPickingColor;
   } else {
-    gl_FragColor = vec4(0., 0., 0., 1.);
+    gl_FragColor = uObjectColor;
   }
 }
         `
