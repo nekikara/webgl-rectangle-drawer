@@ -78,6 +78,19 @@ export class SimpleBeam {
             gl.bindFramebuffer(gl.FRAMEBUFFER, null);
             this._clicked =  this.getRenderingID(readout);
         };
+        canvas.onmousemove = (e: MouseEvent) => {
+            const readout = new Uint8Array(4);
+            const pos = this.get2DCoords(e, canvas);
+            gl.bindFramebuffer(gl.FRAMEBUFFER, this.framebuffer);
+            gl.readPixels(pos.x, pos.y, 1, 1, gl.RGBA, gl.UNSIGNED_BYTE, readout);
+            gl.bindFramebuffer(gl.FRAMEBUFFER, null);
+            const renderingId = this.getRenderingID(readout);
+            if (renderingId === 1 || renderingId === 2) {
+                canvas.setAttribute('style', 'cursor: pointer;')
+            } else {
+                canvas.setAttribute('style', 'cursor: default;')
+            }
+        };
 
         // Initialize building blocks
         const beam = new Beam(cvs, l, r);
