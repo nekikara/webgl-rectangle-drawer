@@ -70,26 +70,46 @@ export class SimpleBeam {
         gl.bindRenderbuffer(gl.RENDERBUFFER, null);
         gl.bindFramebuffer(gl.FRAMEBUFFER, null);
 
+        let onLoad = false;
+        let readyToMove = false;
+
         canvas.onmousedown = (e: MouseEvent) => {
+            console.log('down');
             const readout = new Uint8Array(4);
             const pos = this.get2DCoords(e, canvas);
             gl.bindFramebuffer(gl.FRAMEBUFFER, this.framebuffer);
             gl.readPixels(pos.x, pos.y, 1, 1, gl.RGBA, gl.UNSIGNED_BYTE, readout);
             gl.bindFramebuffer(gl.FRAMEBUFFER, null);
             this._clicked =  this.getRenderingID(readout);
+            readyToMove = onLoad && this._clicked === 2;
         };
         canvas.onmousemove = (e: MouseEvent) => {
-            const readout = new Uint8Array(4);
-            const pos = this.get2DCoords(e, canvas);
-            gl.bindFramebuffer(gl.FRAMEBUFFER, this.framebuffer);
-            gl.readPixels(pos.x, pos.y, 1, 1, gl.RGBA, gl.UNSIGNED_BYTE, readout);
-            gl.bindFramebuffer(gl.FRAMEBUFFER, null);
-            const renderingId = this.getRenderingID(readout);
-            if (renderingId === 1 || renderingId === 2) {
-                canvas.setAttribute('style', 'cursor: pointer;')
+            console.log('move');
+            if (onLoad && this._clicked ==2 && readyToMove) {
+                const load = new ConcentratedLoad(cvs, Math.floor(Math.random() * 10));
+                this._db.set('load', this.getRenderingData(load, 2));
             } else {
-                canvas.setAttribute('style', 'cursor: default;')
+                const readout = new Uint8Array(4);
+                const pos = this.get2DCoords(e, canvas);
+                gl.bindFramebuffer(gl.FRAMEBUFFER, this.framebuffer);
+                gl.readPixels(pos.x, pos.y, 1, 1, gl.RGBA, gl.UNSIGNED_BYTE, readout);
+                gl.bindFramebuffer(gl.FRAMEBUFFER, null);
+                const renderingId = this.getRenderingID(readout);
+                if (renderingId === 2 && !readyToMove) {
+                    canvas.setAttribute('style', 'cursor: ew-resize;');
+                    onLoad = true;
+                } else {
+                    canvas.setAttribute('style', 'cursor: default;');
+                    onLoad = false;
+                }
             }
+        };
+        canvas.onmouseup = (e: MouseEvent) => {
+            console.log('up');
+            onLoad = false;
+            readyToMove = false;
+            this._clicked = null;
+            canvas.setAttribute('style', 'cursor: default;');
         };
 
         // Initialize building blocks
